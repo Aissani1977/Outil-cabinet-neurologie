@@ -4,8 +4,9 @@ app.py
 Application Flask du cabinet.
 
 Pages disponibles :
-    /patients     -> liste des patients
-    /rendez-vous  -> liste des rendez-vous, avec le nom du patient concerné
+    /patients      -> liste des patients
+    /rendez-vous   -> liste des rendez-vous, avec le nom du patient concerné
+    /consultations -> liste des comptes-rendus de consultation
 
 Pour la lancer (depuis la racine du projet, avec (venv) actif) :
     python3 app.py
@@ -46,11 +47,6 @@ def liste_rendez_vous():
     connexion = se_connecter_a_la_base()
     curseur = connexion.cursor()
 
-    # JOINTURE : on relie la table "rendez_vous" à la table "patients"
-    # grâce à la colonne commune patient_id (côté rendez_vous) = id (côté patients).
-    #
-    # "r" et "p" sont des surnoms (alias) qu'on donne aux tables pour écrire
-    # moins de texte : r.date_rdv au lieu de rendez_vous.date_rdv, par exemple.
     curseur.execute("""
         SELECT
             r.date_rdv,
@@ -75,6 +71,47 @@ def liste_rendez_vous():
             f"<em>({rdv['statut']})</em></li>"
         )
     html += "</ul>"
+
+    return html
+
+
+@app.route("/consultations")
+def liste_consultations():
+    connexion = se_connecter_a_la_base()
+    curseur = connexion.cursor()
+
+    # Même principe de jointure que pour les rendez-vous : on relie
+    # "consultations" à "patients" via consultations.patient_id = patients.id
+    curseur.execute("""
+        SELECT
+            c.date_consultation,
+            c.motif,
+            c.observations,
+            c.diagnostic,
+            c.traitement,
+            c.medecin,
+            p.nom,
+            p.prenom
+        FROM consultations AS c
+        JOIN patients AS p ON c.patient_id = p.id
+        ORDER BY c.date_consultation
+    """)
+    consultations = curseur.fetchall()
+
+    connexion.close()
+
+    # Ici on affiche un peu plus d'informations par consultation,
+    # donc on construit un petit bloc par compte-rendu plutôt qu'une simple ligne.
+    html = "<h1>Comptes-rendus de consultation</h1>"
+    for c in consultations:
+        html += "<div style='margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #ccc;'>"
+        html += f"<h3>{c['prenom']} {c['nom']} — {c['date_consultation']}</h3>"
+        html += f"<p><strong>Motif :</strong> {c['motif']}</p>"
+        html += f"<p><strong>Observations :</strong> {c['observations']}</p>"
+        html += f"<p><strong>Diagnostic :</strong> {c['diagnostic']}</p>"
+        html += f"<p><strong>Traitement :</strong> {c['traitement']}</p>"
+        html += f"<p><strong>Médecin :</strong> {c['medecin']}</p>"
+        html += "</div>"
 
     return html
 
