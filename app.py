@@ -24,6 +24,26 @@ def se_connecter_a_la_base():
     return connexion
 
 
+# Pages accessibles par les boutons de navigation : (adresse, texte du bouton)
+PAGES = [
+    ("/patients", "Patients"),
+    ("/rendez-vous", "Rendez-vous"),
+    ("/consultations", "Consultations"),
+]
+
+
+def barre_de_navigation():
+    html = "<nav>"
+    for adresse, libelle in PAGES:
+        html += (
+            f"<a href='{adresse}' style='display: inline-block; padding: 6px 12px; "
+            f"margin-right: 8px; border: 1px solid #333; border-radius: 4px; "
+            f"text-decoration: none; color: #333;'>{libelle}</a>"
+        )
+    html += "</nav><hr>"
+    return html
+
+
 @app.route("/patients")
 def liste_patients():
     connexion = se_connecter_a_la_base()
@@ -34,7 +54,7 @@ def liste_patients():
 
     connexion.close()
 
-    html = "<h1>Liste des patients</h1><ul>"
+    html = barre_de_navigation() + "<h1>Liste des patients</h1><ul>"
     for patient in patients:
         html += f"<li>{patient['prenom']} {patient['nom']} — né(e) le {patient['date_naissance']}</li>"
     html += "</ul>"
@@ -63,7 +83,7 @@ def liste_rendez_vous():
 
     connexion.close()
 
-    html = "<h1>Liste des rendez-vous</h1><ul>"
+    html = barre_de_navigation() + "<h1>Liste des rendez-vous</h1><ul>"
     for rdv in rendez_vous:
         html += (
             f"<li>{rdv['date_rdv']} à {rdv['heure_rdv']} — "
@@ -102,7 +122,7 @@ def liste_consultations():
 
     # Ici on affiche un peu plus d'informations par consultation,
     # donc on construit un petit bloc par compte-rendu plutôt qu'une simple ligne.
-    html = "<h1>Comptes-rendus de consultation</h1>"
+    html = barre_de_navigation() + "<h1>Comptes-rendus de consultation</h1>"
     for c in consultations:
         html += "<div style='margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #ccc;'>"
         html += f"<h3>{c['prenom']} {c['nom']} — {c['date_consultation']}</h3>"
