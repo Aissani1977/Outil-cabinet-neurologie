@@ -3,7 +3,9 @@ create_db.py
 -------------
 Ce script crée la base de données SQLite du cabinet de neurologie.
 On l'exécute UNE SEULE FOIS pour créer le fichier "cabinet.db"
-et les tables qu'il contient (patients, rendez_vous, consultations).
+et les tables qu'il contient (patients, rendez_vous, consultations, documents).
+Le relancer sur une base existante est sans danger : il ajoute seulement
+les tables qui manquent, sans toucher aux données.
 
 Pour l'exécuter : ouvrir un terminal dans ce dossier et taper :
     python create_db.py
@@ -67,13 +69,29 @@ CREATE TABLE IF NOT EXISTS consultations (
 )
 """)
 
-# 6. On enregistre (valide) les changements dans le fichier.
+# 6. Création de la table "documents"
+#    Chaque document (IRM, EEG, courrier...) appartient à un patient.
+#    "nom_fichier" contiendra le nom du fichier enregistré sur l'ordinateur.
+curseur.execute("""
+CREATE TABLE IF NOT EXISTS documents (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    patient_id INTEGER NOT NULL,
+    titre TEXT NOT NULL,
+    type_document TEXT,
+    date_document DATE,
+    nom_fichier TEXT,
+    FOREIGN KEY (patient_id) REFERENCES patients (id)
+)
+""")
+
+# 7. On enregistre (valide) les changements dans le fichier.
 connexion.commit()
 
-# 7. On ferme proprement la connexion.
+# 8. On ferme proprement la connexion.
 connexion.close()
 
 print("✅ Base de données 'cabinet.db' créée avec succès, avec les tables :")
 print("   - patients")
 print("   - rendez_vous")
 print("   - consultations")
+print("   - documents")
